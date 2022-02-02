@@ -1,4 +1,4 @@
- <!--modale connexion administrateur-->
+<!--modale connexion administrateur-->
  <div id="modal-container-admin">
         <div class="modal-content">
             <div class="modal-header">
@@ -75,35 +75,40 @@
             {
                 include ("../config/bdd.php");
                 include ("../config/fonctions.php");
-                $lien=mysqli_connect($serveur,$loginbdd,$mdpbdd,$bdd);
-                $email=nettoyage($lien,$_REQUEST['email']);
-                $pwd=$_REQUEST['pwd'];
-                $req="SELECT * from utilisateurs WHERE email='$email'";
+                
+                // Selectionne la ligne de l'utilisateur qui tente l'accès et récupérer la colonne Admin
+                $req="SELECT administrateur from utilisateurs WHERE email='$email'";
                 $res=mysqli_query($lien,$req);
-                if(!$res)
-                {
-                    echo "Erreur SQL".mysqli_error($lien);
+                $row = $res->fetch(MYSQLI_ASSOC);
+                if($row[0] != 1){ // tu compares ta ligne de ta colonne 'admin' 
+                    header("Location: modale-erreur-connexion.html"); // different de 1 donc redirection
                 }
-                else
-                {
-                    $existe=mysqli_num_rows($res);
-                    if ($existe) {
-                        $infos=mysqli_fetch_array($res);
-                    if(password_verify($pwd,$infos['pwd']))
-                    {
-                        session_start() ;
-                        $_SESSION['idu']=$infos['idu'];
-                        $_SESSION['nom']=$infos['nom'];
-						$_SESSION['prénom']=$infos['prénom'];
-						$_SESSION['email']=$infos['email'];
-						header("Location: modale-erreur-connexion.html"); ?> <!--redirection vers la modale erreur de connexion--> <?php
-					}
-                    else 
-                    {     
-                        echo "Infos incorrectes";
-                    }
-                }
-                }     
+                // Sinon on execute le code normalement
+                else { 
+                    $lien=mysqli_connect($serveur,$loginbdd,$mdpbdd,$bdd);
+                    $email=nettoyage($lien,$_REQUEST['email']);
+                    $pwd=$_REQUEST['pwd'];
+                    $req="SELECT * from utilisateurs WHERE email='$email'";
+                    $res=mysqli_query($lien,$req);
+                    if(!$res){
+                        echo "Erreur SQL".mysqli_error($lien);
+                    }else {
+                        $existe=mysqli_num_rows($res);
+                        if ($existe) {
+                            $infos=mysqli_fetch_array($res);
+                            if(password_verify($pwd,$infos['pwd'])){
+                                session_start() ;
+                                $_SESSION['idu']=$infos['idu'];
+                                $_SESSION['nom']=$infos['nom'];
+                                $_SESSION['prénom']=$infos['prénom'];
+                                $_SESSION['email']=$infos['email'];
+					        }else{     
+                                echo "Infos incorrectes";
+                            }
+                        }
+                    }     
                 mysqli_close($lien);
+                }   
             }
-            ?>
+                
+?>
